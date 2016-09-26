@@ -1,0 +1,117 @@
+######################################
+##									##
+##		BibCut v0.3					##
+##		Ready for python 3			##
+##									##
+######################################
+
+from glob import glob
+import os
+
+# Initialising variables, read bib libraries. If you need more than 2 bib files
+# you will have to create more fileobjects (fobj)
+
+if os.name == 'nt':
+	fobj = open('K:\Bib\library3.bib','r')
+	fobj2 = open('K:\Promotion\Publikationen\publications.bib','r')
+	fobj3 = open('K:\Bib\doping.bib','r')
+
+elif os.name == 'mac':
+	fobj = open('\Volumes\HYPERX\Bib\library3.bib','r')
+	fobj2 = open('\Volumes\HYPERX\Promotion\Publikationen\publications.bib','r')
+	fobj3 = open('\Volumes\HYPERX\Bib\doping.bib','r')
+
+x = []
+citekey = []
+words = []
+parameter = []
+dict = {}
+dicttype = {}
+citation = {}
+type = 'a'
+test = []
+
+# For more .bib files, just add additional fobj to x via x.append()
+
+for line in fobj:
+	x.append(str(line))
+
+for line in fobj2:
+	x.append(str(line))
+
+for line in fobj3:
+	x.append(str(line))
+
+# And don't forget to close them here.	
+
+fobj.close()
+fobj2.close()
+fobj3.close()
+
+# Parsing bib library into the following format: 
+# dict{citekey: dict{word:parameter}}
+# dicttype holds the information which type the .bib entry was
+# (i.e. article, poster, thesis, ...)
+
+for i in range(len(x)):
+	if x[i][0] == '@':
+		citekey = x[i].split('{')[1].split(',')[0]
+		type = x[i][1:].split('{')[0]
+		words = []
+		parameter = []
+		citation = {}
+		for j in range(1,100):
+			if x[i+j][0] == "}":
+				break
+			test.append(i)
+			words.append(x[i+j].split('=')[0][1:-1])
+			parameter.append(x[i+j].split('=')[1][1:-2])
+
+		for k in range(len(words)):
+			citation[words[k]] = parameter[k]
+
+		dict[citekey] = citation
+		dicttype[citekey] = type
+
+	else:
+		pass
+
+# Reading auxilary File
+
+y = glob('*.aux')[0]
+
+fobj4 = open(y, 'r')
+aux = []
+aux_wo_mult = []
+mult = 0
+
+for line in fobj4:
+	if line[:10] == '\citation{' and ( line[10] == '1' or line[10] == '2' ):
+		aux.append(line[10:-2])
+
+fobj4.close()
+
+for i in range(len(aux)):
+	mult = len(aux[i].split(','))
+	if mult >> 1:
+		for j in range(mult):
+			aux_wo_mult.append(aux[i].split(',')[j])
+	else:
+		aux_wo_mult.append(aux[i])
+
+aux2 = list(set(aux_wo_mult))
+
+# Writing Output.bib with only relevant references
+
+output = y[:-3]+'bib'
+fobj5 = open(output, 'w+')
+fobj5.write('%%%' + '%'*len(output) + '%%%\n%% ' + ' '*len(output) + ' %%\n')
+fobj5.write('%%%% %s %%%%\n' % (output))
+fobj5.write('%% ' + ' '*len(output) + ' %%\n%%%' + '%'*len(output) + '%%%\n')
+for i in range(len(aux2)):
+	fobj5.write('\n@%s{%s,\n' % (dicttype[aux2[i]],aux2[i]))
+	for j in range(len(dict[aux2[i]])):
+		fobj5.write('\t%s = %s,\n' % (list(dict[aux2[i]].keys())[j], list(dict[aux2[i]].values())[j]))
+	fobj5.write('}\n')
+
+fobj5.close()
