@@ -23,3 +23,7 @@ So be sure to have CLEAN .bib files.
 # BibCut v0.2
 
 Some minor bugfixes and cosmetic stuff for export of the resulting .bib file (the output bib will now be renamed into the name of the auxilary file, i.e.: test.aux will yield in test.bib as output file).
+
+# BibCut v0.3
+
+Added support for python 3.x.
